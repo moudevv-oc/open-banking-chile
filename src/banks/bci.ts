@@ -21,6 +21,12 @@ interface BciApiMovement {
   glosa: string;
 }
 
+function normalizeBciApiDate(raw: string): string {
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return `${iso[3]}-${iso[2]}-${iso[1]}`;
+  return normalizeDate(raw);
+}
+
 export function normalizeBciApiMovements(captures: unknown[]): BankMovement[] {
   const movements: BankMovement[] = [];
 
@@ -34,7 +40,7 @@ export function normalizeBciApiMovements(captures: unknown[]): BankMovement[] {
       if (!raw || isNaN(raw)) continue;
 
       movements.push({
-        date: normalizeDate(m.fechaMovimiento?.split("T")[0] ?? ""),
+        date: normalizeBciApiDate(m.fechaMovimiento?.split("T")[0] ?? ""),
         description: m.glosa ?? "",
         amount: m.tipo === "C" ? -raw : raw,
         balance: 0,
