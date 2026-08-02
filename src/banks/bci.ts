@@ -172,6 +172,21 @@ async function bciLogin(
   return { success: true };
 }
 
+async function dismissTrustDevicePrompt(page: Page, debugLog: string[]): Promise<void> {
+  const clicked = await page.evaluate(() => {
+    const candidates = Array.from(document.querySelectorAll("button, a")) as HTMLElement[];
+    const omit = candidates.find((el) => el.textContent?.trim().toLowerCase() === "omitir");
+    if (!omit) return false;
+    omit.click();
+    return true;
+  });
+
+  if (clicked) {
+    debugLog.push("  Trust device prompt dismissed");
+    await delay(3000);
+  }
+}
+
 async function extractMovementsFromFrame(frame: Frame, debugLog: string[]): Promise<BankMovement[]> {
   await frame.evaluate(() => {
     for (const opt of document.querySelectorAll("a, button, span, option")) {
@@ -419,6 +434,7 @@ async function scrapeBci(session: BrowserSession, options: ScraperOptions): Prom
   }
 
   progress("Sesión iniciada correctamente");
+  await dismissTrustDevicePrompt(page, debugLog);
   await closePopups(page);
   await delay(2000);
 
